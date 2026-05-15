@@ -1,0 +1,117 @@
+# =============================================================================
+# Publish Helm Chart to GHCR
+# =============================================================================
+# Triggers on:
+# - Push to main (auto-release)
+# - Manual dispatch
+# - Tags matching v*
+# =============================================================================
+
+name: Publish Helm Chart to GHCR
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'charts/**'
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.1)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  CHART_PATH: charts/arc-runner-stack
+
+jobs:
+  lint:
+    name: Lint Chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Lint Chart
+        run: helm lint ${{ env.CHART_PATH }}
+
+  publish:
+    name: Publish to GHCR
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ -n "${{ github.event.inputs.version }}" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+          else
+            # Get version from Chart.yaml and append build number
+            BASE_VERSION=$(grep '^version:' ${{ env.CHART_PATH }}/Chart.yaml | awk '{print $2}')
+            VERSION="${BASE_VERSION}-${GITHUB_SHA::7}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "📦 Publishing version: ${VERSION}"
+
+      - name: Update Chart version
+        run: |
+          sed -i "s/^version:.*/version: ${{ steps.version.outputs.version }}/" ${{ env.CHART_PATH }}/Chart.yaml
+          cat ${{ env.CHART_PATH }}/Chart.yaml
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ${{ env.REGISTRY }} \
+            --username ${{ github.actor }} \
+            --password-stdin
+
+      - name: Package Chart
+        run: |
+          helm package ${{ env.CHART_PATH }} --destination .
+
+      - name: Push to GHCR
+        run: |
+          CHART_PACKAGE=$(ls *.tgz)
+          echo "📤 Pushing ${CHART_PACKAGE} to GHCR..."
+          
+          helm push ${CHART_PACKAGE} oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts
+          
+          echo "✅ Published: oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts/arc-runner-stack:${{ steps.version.outputs.version }}"
+
+      - name: Create Release Summary
+        run: |
+          echo "## 📦 Helm Chart Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Chart | \`arc-runner-stack\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | \`${{ steps.version.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Registry | \`${{ env.REGISTRY }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Install Command" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "helm install arc-stack oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts/arc-runner-stack --version ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

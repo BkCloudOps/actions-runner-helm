@@ -1,0 +1,33 @@
+apiVersion: v2
+name: arc-runner-stack
+description: Complete GitHub Actions Runner stack with ARC, External Secrets Operator, and cert-manager
+type: application
+version: 1.0.0
+appVersion: "0.9.3"
+
+dependencies:
+  - name: gha-runner-scale-set-controller
+    version: "0.9.3"
+    repository: "oci://ghcr.io/actions/actions-runner-controller-charts"
+    alias: arc-controller
+    condition: arc-controller.enabled
+
+  - name: gha-runner-scale-set
+    version: "0.9.3"
+    repository: "oci://ghcr.io/actions/actions-runner-controller-charts"
+    alias: arc-runners
+    condition: arc-runners.enabled
+
+  - name: external-secrets
+    version: "0.10.0"
+    repository: "https://charts.external-secrets.io"
+    condition: external-secrets.enabled
+
+  - name: cert-manager
+    version: "1.15.0"
+    repository: "https://charts.jetstack.io"
+    condition: cert-manager.enabled
+
+maintainers:
+  - name: BkCloudOps
+    url: https://github.com/BkCloudOps
