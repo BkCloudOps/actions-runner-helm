@@ -1,76 +1,24 @@
 # =============================================================================
-# ARC Runner Stack - Default Values
+# ARC Runner Stack - Configuration Values
 # =============================================================================
-# Complete stack for running self-hosted GitHub Actions runners on Kubernetes
-# with External Secrets Operator for secret management and cert-manager for TLS
+# Configuration chart for GitHub Actions Runner infrastructure
+# Provides ClusterSecretStore, ExternalSecrets, and namespace definitions
 # =============================================================================
 
-global:
-  # GitHub organization or repository URL
-  githubConfigUrl: "https://github.com/BkCloudOps"
-  
-  # Runner group name
-  runnerGroup: "straw-hat-runners-linux"
-  
-  # Azure Key Vault for secrets (used by ESO)
-  keyVault:
-    name: ""
-    tenantId: ""
-    
-  # Managed Identity for Azure resources
-  managedIdentity:
-    clientId: ""
+# GitHub organization or repository URL
+githubConfigUrl: "https://github.com/BkCloudOps"
 
-# -----------------------------------------------------------------------------
-# ARC Controller
-# -----------------------------------------------------------------------------
-arc-controller:
-  enabled: true
+# Runner group name
+runnerGroup: "straw-hat-runners-linux"
 
-# -----------------------------------------------------------------------------
-# ARC Runner Scale Set
-# -----------------------------------------------------------------------------
-arc-runners:
-  enabled: true
+# Azure Key Vault configuration (for External Secrets)
+keyVault:
+  name: ""
+  tenantId: ""
   
-  # Scaling configuration
-  minRunners: 1
-  maxRunners: 10
-  
-  # Container mode: dind (Docker-in-Docker) or kubernetes
-  containerMode:
-    type: "dind"
-  
-  # Runner image (optional - uses default if not set)
-  # template:
-  #   spec:
-  #     containers:
-  #       - name: runner
-  #         image: ghcr.io/actions/actions-runner:latest
-
-# -----------------------------------------------------------------------------
-# External Secrets Operator
-# -----------------------------------------------------------------------------
-external-secrets:
-  enabled: true
-  
-  installCRDs: true
-  
-  webhook:
-    port: 9443
-
-# -----------------------------------------------------------------------------
-# cert-manager
-# -----------------------------------------------------------------------------
-cert-manager:
-  enabled: true
-  
-  installCRDs: true
-  
-  # Enable if you need Let's Encrypt certificates
-  # ingressShim:
-  #   defaultIssuerName: letsencrypt-prod
-  #   defaultIssuerKind: ClusterIssuer
+# Managed Identity for Workload Identity
+managedIdentity:
+  clientId: ""
 
 # -----------------------------------------------------------------------------
 # Cluster Secret Store (for Azure Key Vault)
@@ -78,32 +26,17 @@ cert-manager:
 clusterSecretStore:
   enabled: true
   name: azure-keyvault-store
-  
-  # Provider configuration
-  provider: azure
-  
-  # Azure Key Vault configuration (uses global values)
-  # keyVault:
-  #   name: ""
-  #   tenantId: ""
 
 # -----------------------------------------------------------------------------
 # External Secrets (secrets to sync from Key Vault)
 # -----------------------------------------------------------------------------
 externalSecrets:
   enabled: true
-  
-  # Secrets to create from Key Vault
   secrets:
     - name: github-pat-secret
-      namespace: arc-systems
+      namespace: arc-runners
       secretKey: github_token
       remoteKey: github-pat
-      
-    - name: acr-credentials
-      namespace: arc-runners
-      secretKey: password
-      remoteKey: acr-password
 
 # -----------------------------------------------------------------------------
 # Namespaces
@@ -111,5 +44,4 @@ externalSecrets:
 namespaces:
   arcSystems: arc-systems
   arcRunners: arc-runners
-  certManager: cert-manager
   externalSecrets: external-secrets
