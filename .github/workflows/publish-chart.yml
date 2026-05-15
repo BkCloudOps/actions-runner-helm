@@ -95,14 +95,17 @@ jobs:
       - name: Push to GHCR
         run: |
           CHART_PACKAGE=$(ls *.tgz)
+          # GHCR requires lowercase repository owner
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           echo "📤 Pushing ${CHART_PACKAGE} to GHCR..."
           
-          helm push ${CHART_PACKAGE} oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts
+          helm push ${CHART_PACKAGE} oci://${{ env.REGISTRY }}/${REPO_OWNER}/charts
           
-          echo "✅ Published: oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts/arc-runner-stack:${{ steps.version.outputs.version }}"
+          echo "✅ Published: oci://${{ env.REGISTRY }}/${REPO_OWNER}/charts/arc-runner-stack:${{ steps.version.outputs.version }}"
 
       - name: Create Release Summary
         run: |
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           echo "## 📦 Helm Chart Published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
@@ -113,5 +116,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Install Command" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "helm install arc-stack oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts/arc-runner-stack --version ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "helm install arc-stack oci://${{ env.REGISTRY }}/${REPO_OWNER}/charts/arc-runner-stack --version ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
