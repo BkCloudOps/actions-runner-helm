@@ -116,4 +116,14 @@ You can leave `containerMode` **unset** and write the full `template.spec` yours
 
 See ARC docs section "Customizing container modes" for `dind-rootless` example.
 
+## 6.7 Interaction with the JIT lifecycle
+
+Container mode does **not** change the JIT-config flow described in [14-listener-protocol-and-jit.md §5](14-listener-protocol-and-jit.md#5-jit-configuration-end-to-end). The `ACTIONS_RUNNER_INPUT_JITCONFIG` env var is injected into the `runner` container in every mode. What differs is how that runner subsequently starts *job containers*:
+
+| Mode | Job container started by | Network/storage isolation |
+|------|---------------------------|----------------------------|
+| `dind` | The `dockerd` sidecar inside the runner Pod | Job container shares the runner Pod's network namespace |
+| `kubernetes` | A new sibling Pod created via the K8s API | Job container has its own Pod IP and its own ServiceAccount-less identity |
+| `kubernetes-novolume` | Same as `kubernetes` | Same |
+
 Continue to [07-authentication.md](07-authentication.md).

@@ -1,5 +1,7 @@
 # 10. Install, Upgrade, Uninstall
 
+This chapter is the operational runbook: install from scratch, upgrade across minor versions (with the CRD caveat), rollback, drain, and uninstall. Trigger semantics on the GitHub side are documented in [14-listener-protocol-and-jit.md §2](14-listener-protocol-and-jit.md#2-listener-bootstrap-sequence) — useful when an install hangs at the listener-registration step.
+
 ## 10.1 Prerequisites
 
 | Requirement | How to check |

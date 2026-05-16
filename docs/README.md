@@ -19,5 +19,7 @@ This documentation set explains, end-to-end, how **GitHub Actions Runner Control
 | 10 | [10-install-and-upgrade.md](10-install-and-upgrade.md) | Install order, upgrade caveats (CRDs), rollback |
 | 11 | [11-observability.md](11-observability.md) | Metrics, logs, troubleshooting matrix |
 | 12 | [12-security-model.md](12-security-model.md) | Namespaces, RBAC, privileged containers, secrets-at-rest |
+| 13 | [13-crd-reference.md](13-crd-reference.md) | Field-by-field reference for all four ARC CRDs (Kubernetes-API-doc style) |
+| 14 | [14-listener-protocol-and-jit.md](14-listener-protocol-and-jit.md) | Wire-level: how the listener long-polls GitHub and how JIT runner configs are minted, injected, and consumed |
 
 > **TL;DR** — A push to GitHub triggers a workflow. GitHub holds the job in a queue. A **Listener Pod** in your cluster is long-polling GitHub. When GitHub says "job available", the Listener tells the **Controller** to create an **Ephemeral Runner Pod**. That pod registers with GitHub using a Just-in-Time token, runs the job, then self-destructs.

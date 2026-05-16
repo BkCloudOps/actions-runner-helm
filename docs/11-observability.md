@@ -1,5 +1,7 @@
 # 11. Observability — Logs, Metrics, Troubleshooting
 
+This chapter is the operator's handbook: what to look at, in what order, and what each signal means. It complements the protocol-level failure modes catalogued in [14-listener-protocol-and-jit.md §8](14-listener-protocol-and-jit.md#8-failure-modes-and-recovery) and the scaling alerts proposed in [08-scaling-behavior.md §8.7](08-scaling-behavior.md#87-observability-for-scaling).
+
 ## 11.1 Logs
 
 ### Controller manager
