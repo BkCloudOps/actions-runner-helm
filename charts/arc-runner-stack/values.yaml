@@ -35,13 +35,18 @@ gha-runner-scale-set:
   minRunners: 0
   maxRunners: 5
   
-  # Runner group (optional)
-  # runnerGroup: "straw-hat-runners-linux"
-  
+  # Scale-set name shown in the GitHub UI (defaults to the AutoscalingRunnerSet
+  # metadata.name if unset). Override per-environment.
+  runnerScaleSetName: "straw-hat-runners-linux"
+
+  # Pre-existing GitHub runner group. Must already exist on GitHub; leave
+  # as "default" unless a custom group has been created.
+  runnerGroup: "default"
+
   # Container mode configuration
   containerMode:
     type: "dind"  # or "kubernetes"
-  
+
   # Template for runner pods
   template:
     spec:
@@ -49,9 +54,6 @@ gha-runner-scale-set:
         - name: runner
           image: ghcr.io/actions/actions-runner:latest
           command: ["/home/runner/run.sh"]
-
-# Runner group name
-runnerGroup: "straw-hat-runners-linux"
 
 # Azure Key Vault configuration (for External Secrets)
 keyVault:
