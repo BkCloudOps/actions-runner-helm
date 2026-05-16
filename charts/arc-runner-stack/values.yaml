@@ -1,12 +1,25 @@
 # =============================================================================
 # ARC Runner Stack - Configuration Values
 # =============================================================================
-# Configuration chart for GitHub Actions Runner infrastructure
-# Includes ARC controller, runner scale sets, and supporting resources
+# Umbrella chart for the GitHub Actions runner stack (controller + scale set).
+#
+# Scope of THIS chart:
+#   - gha-runner-scale-set-controller (subchart)
+#   - gha-runner-scale-set            (subchart)
+#   - namespaces: arc-systems, arc-runners
+#
+# Explicitly OUT OF SCOPE (handled by the cluster bootstrap layer in
+# actions-runner-gitops/infrastructure/controllers):
+#   - cert-manager
+#   - external-secrets-operator + ClusterSecretStore + ExternalSecret(s)
+#   - Workload-Identity ServiceAccount for ESO
+#
+# Those addons are cluster-wide prerequisites and must be installed before
+# this chart is reconciled.
 # =============================================================================
 
 # GitHub organization or repository URL
-githubConfigUrl: "https://github.com/BkCloudOps"
+githubConfigUrl: "https://github.com/StrawHat-Enterprise"
 
 # -----------------------------------------------------------------------------
 # ARC Controller (gha-runner-scale-set-controller)
@@ -28,13 +41,15 @@ runnerScaleSet:
 gha-runner-scale-set:
   # Runner scale set configuration
   # See: https://github.com/actions/actions-runner-controller/blob/master/charts/gha-runner-scale-set/values.yaml
-  githubConfigUrl: "https://github.com/BkCloudOps"
+  githubConfigUrl: "https://github.com/StrawHat-Enterprise"
+  # Name of the K8s Secret holding the auth material. The Secret itself is
+  # synced from Azure Key Vault by External Secrets Operator (bootstrap layer).
   githubConfigSecret: github-pat-secret
-  
+
   # Minimum and maximum runners
   minRunners: 0
   maxRunners: 5
-  
+
   # Scale-set name shown in the GitHub UI (defaults to the AutoscalingRunnerSet
   # metadata.name if unset). Override per-environment.
   runnerScaleSetName: "straw-hat-runners-linux"
@@ -47,45 +62,18 @@ gha-runner-scale-set:
   containerMode:
     type: "dind"  # or "kubernetes"
 
-  # Template for runner pods
+  # Runner pod template. The image comes from this organization's GitHub
+  # Container Registry; per-type overlays override the tag.
   template:
     spec:
       containers:
         - name: runner
-          image: ghcr.io/actions/actions-runner:latest
+          image: ghcr.io/strawhat-enterprise/actions-runner:linux-latest
           command: ["/home/runner/run.sh"]
 
-# Azure Key Vault configuration (for External Secrets)
-keyVault:
-  name: ""
-  tenantId: ""
-  
-# Managed Identity for Workload Identity
-managedIdentity:
-  clientId: ""
-
 # -----------------------------------------------------------------------------
-# Cluster Secret Store (for Azure Key Vault)
-# -----------------------------------------------------------------------------
-clusterSecretStore:
-  enabled: true
-  name: azure-keyvault-store
-
-# -----------------------------------------------------------------------------
-# External Secrets (secrets to sync from Key Vault)
-# -----------------------------------------------------------------------------
-externalSecrets:
-  enabled: true
-  secrets:
-    - name: github-pat-secret
-      namespace: arc-runners
-      secretKey: github_token
-      remoteKey: github-pat
-
-# -----------------------------------------------------------------------------
-# Namespaces
+# Namespaces created by this chart
 # -----------------------------------------------------------------------------
 namespaces:
   arcSystems: arc-systems
   arcRunners: arc-runners
-  externalSecrets: external-secrets
