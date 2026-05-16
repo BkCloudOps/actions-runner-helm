@@ -21,5 +21,6 @@ This documentation set explains, end-to-end, how **GitHub Actions Runner Control
 | 12 | [12-security-model.md](12-security-model.md) | Namespaces, RBAC, privileged containers, secrets-at-rest |
 | 13 | [13-crd-reference.md](13-crd-reference.md) | Field-by-field reference for all four ARC CRDs (Kubernetes-API-doc style) |
 | 14 | [14-listener-protocol-and-jit.md](14-listener-protocol-and-jit.md) | Wire-level: how the listener long-polls GitHub and how JIT runner configs are minted, injected, and consumed |
+| 15 | [15-recreating-the-three-repo-stack.md](15-recreating-the-three-repo-stack.md) | How to structure and maintain the `runner-images` / `github-self-hosted-runners-aks` / `ets-runners-gitops` trio in your own setup |
 
 > **TL;DR** — A push to GitHub triggers a workflow. GitHub holds the job in a queue. A **Listener Pod** in your cluster is long-polling GitHub. When GitHub says "job available", the Listener tells the **Controller** to create an **Ephemeral Runner Pod**. That pod registers with GitHub using a Just-in-Time token, runs the job, then self-destructs.
