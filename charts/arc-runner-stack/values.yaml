@@ -2,11 +2,53 @@
 # ARC Runner Stack - Configuration Values
 # =============================================================================
 # Configuration chart for GitHub Actions Runner infrastructure
-# Provides ClusterSecretStore, ExternalSecrets, and namespace definitions
+# Includes ARC controller, runner scale sets, and supporting resources
 # =============================================================================
 
 # GitHub organization or repository URL
 githubConfigUrl: "https://github.com/BkCloudOps"
+
+# -----------------------------------------------------------------------------
+# ARC Controller (gha-runner-scale-set-controller)
+# -----------------------------------------------------------------------------
+controller:
+  enabled: true
+
+gha-runner-scale-set-controller:
+  # Controller configuration
+  # See: https://github.com/actions/actions-runner-controller/blob/master/charts/gha-runner-scale-set-controller/values.yaml
+  replicaCount: 1
+  
+# -----------------------------------------------------------------------------
+# Runner Scale Set (gha-runner-scale-set)
+# -----------------------------------------------------------------------------
+runnerScaleSet:
+  enabled: true
+
+gha-runner-scale-set:
+  # Runner scale set configuration
+  # See: https://github.com/actions/actions-runner-controller/blob/master/charts/gha-runner-scale-set/values.yaml
+  githubConfigUrl: "https://github.com/BkCloudOps"
+  githubConfigSecret: github-pat-secret
+  
+  # Minimum and maximum runners
+  minRunners: 0
+  maxRunners: 5
+  
+  # Runner group (optional)
+  # runnerGroup: "straw-hat-runners-linux"
+  
+  # Container mode configuration
+  containerMode:
+    type: "dind"  # or "kubernetes"
+  
+  # Template for runner pods
+  template:
+    spec:
+      containers:
+        - name: runner
+          image: ghcr.io/actions/actions-runner:latest
+          command: ["/home/runner/run.sh"]
 
 # Runner group name
 runnerGroup: "straw-hat-runners-linux"

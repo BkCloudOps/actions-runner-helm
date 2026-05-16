@@ -3,7 +3,7 @@ name: arc-runner-stack
 description: Configuration chart for GitHub Actions Runner infrastructure - ClusterSecretStore, ExternalSecrets, and namespaces
 type: application
 version: 1.0.0
-appVersion: "0.9.3"
+appVersion: "0.14.1"
 
 # NOTE: This chart provides configuration resources only.
 # ARC, ESO, and cert-manager are deployed via GitOps (Flux HelmReleases).
@@ -16,4 +16,14 @@ appVersion: "0.9.3"
 maintainers:
   - name: BkCloudOps
     url: https://github.com/BkCloudOps
+
+dependencies:
+  - name: gha-runner-scale-set-controller
+    version: "0.14.1"
+    repository: oci://ghcr.io/actions/actions-runner-controller-charts
+    condition: controller.enabled
+  - name: gha-runner-scale-set
+    version: "0.14.1"
+    repository: oci://ghcr.io/actions/actions-runner-controller-charts
+    condition: runnerScaleSet.enabled
 
